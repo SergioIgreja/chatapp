@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/message_received_parent_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="5dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".75"
+        android:gravity="start">
+        <TextView
+            android:text="j1ieq"
+            android:id="@+id/friend_message"
+            android:background="@drawable/message_received_rectangle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="14sp"
+            android:textColor="@color/message_received_text"
+            android:textSize="20sp"
+            android:layout_marginTop="4dp"
+            android:gravity="start"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/friend_message_image"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight=".25"
+        android:layout_gravity="end"/>
+
+</LinearLayout>
