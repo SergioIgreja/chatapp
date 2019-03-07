@@ -7,6 +7,7 @@
     android:padding="5dp"
     android:id="@+id/message_sent_parent_layout">
 
+
     <View
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -29,12 +30,14 @@
             android:textSize="20sp"
             android:layout_marginTop="4dp"
             android:gravity="end"/>
-        <ImageView
+        <com.github.chrisbanes.photoview.PhotoView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/my_message_image"
+            android:adjustViewBounds="true"
             android:layout_gravity="end"
-            android:visibility="gone"/>
+            android:visibility="gone"
+            android:scaleType="centerCrop"/>
     </LinearLayout>
 
 </LinearLayout>

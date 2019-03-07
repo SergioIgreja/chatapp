@@ -20,7 +20,10 @@ public class App extends Application {
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder().cacheInMemory(true)
                 .cacheOnDisc(true).resetViewBeforeLoading(true)
                 .showImageForEmptyUri(R.drawable.ic_launcher_foreground)
-                .showImageOnFail(R.drawable.gato).build();
+                .cacheInMemory(true)
+                .cacheOnDisk(true)
+
+                .build();
 
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
            .defaultDisplayImageOptions(defaultOptions)

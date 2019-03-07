@@ -1,20 +1,24 @@
 package com.example.chat.adapter;
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.chat.R;
 import com.example.chat.models.Message;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.github.chrisbanes.photoview.PhotoView;
 
+import org.greenrobot.eventbus.EventBus;
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -31,6 +35,12 @@ public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         mContext = context;
         mMessages = messages;
     }
+
+    public void addMessage(Message message) {
+        this.mMessages.add(message);
+        notifyDataSetChanged();
+    }
+
 
     @NonNull
     @Override
@@ -52,15 +62,36 @@ public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder fragmentViewHolder, final int position) {
            if(fragmentViewHolder instanceof MessageReceivedViewHolder) {
                ((MessageReceivedViewHolder) fragmentViewHolder).friendMessage.setText(mMessages.get(position).getText());
-           }else {
-               MessageSentViewHolder messageSentViewHolder = (MessageSentViewHolder) fragmentViewHolder;
-               Message message = mMessages.get(position);
+           }else if (fragmentViewHolder instanceof MessageSentViewHolder){
+               final MessageSentViewHolder messageSentViewHolder = (MessageSentViewHolder) fragmentViewHolder;
+               final Message message = mMessages.get(position);
                if (message.getImage() == null){
-                   messageSentViewHolder.myMessage.setText(mMessages.get(position).getText());
+                   messageSentViewHolder.myMessage.setText(message.getText());
+                   messageSentViewHolder.myMessageImage.setVisibility(View.GONE);
+                   messageSentViewHolder.myMessage.setVisibility(View.VISIBLE);
                }else {
-                   messageSentViewHolder.myMessageImage.setImageBitmap(message.getImage());
+                   Glide.with(mContext)
+                           .load(message.getImage().getImageUri())
+                           .into(messageSentViewHolder.myMessageImage);
                    messageSentViewHolder.myMessageImage.setVisibility(View.VISIBLE);
                    messageSentViewHolder.myMessage.setVisibility(View.GONE);
+                   messageSentViewHolder.myMessageImage.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener() {
+                       @Override
+                       public boolean onSingleTapConfirmed(MotionEvent e) {
+                           return false;
+                       }
+
+                       @Override
+                       public boolean onDoubleTap(MotionEvent e) {
+                           EventBus.getDefault().post(message.getImage().getImageUri());
+                           return true;
+                       }
+
+                       @Override
+                       public boolean onDoubleTapEvent(MotionEvent e) {
+                           return false;
+                       }
+                   });
                }
            }
     }
@@ -83,24 +114,24 @@ public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public static class MessageReceivedViewHolder extends RecyclerView.ViewHolder {
 
-        TextView friendMessage;
-        LinearLayout messageReceivedParentLayout;
+        @BindView(R.id.friend_message) TextView friendMessage;
+        @BindView(R.id.message_received_parent_layout) LinearLayout messageReceivedParentLayout;
 
         public MessageReceivedViewHolder(View v) {
             super(v);
-            friendMessage = (TextView) v.findViewById(R.id.friend_message);
-            messageReceivedParentLayout = (LinearLayout) v.findViewById(R.id.message_received_parent_layout);
+            ButterKnife.bind(this,v);
         }
     }
 
     public static class MessageSentViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.my_message) TextView myMessage;
         @BindView(R.id.message_sent_parent_layout) LinearLayout messageSentParentLayout;
-        @BindView(R.id.my_message_image) ImageView myMessageImage;
+        @BindView(R.id.my_message_image) PhotoView myMessageImage;
 
         public MessageSentViewHolder(View v) {
             super(v);
             ButterKnife.bind(this, v);
         }
     }
+
 }

@@ -5,6 +5,7 @@
     android:background="@color/colorHome"
     android:id="@+id/main_relative_layout"
     >
+
     <ImageView
         android:id="@+id/image_gato"
         android:layout_width="match_parent"

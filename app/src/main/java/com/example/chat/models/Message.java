@@ -1,6 +1,7 @@
 package com.example.chat.models;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -16,7 +17,7 @@ public class Message {
     @SerializedName("text")
     @Expose
     private String text;
-    private Bitmap image;
+    private Image image;
 
     public Message(Integer index, Boolean author, String text) {
         this.setIndex(index);
@@ -24,10 +25,10 @@ public class Message {
         this.setText(text);
     }
 
-    public Message(Integer index, Boolean author, Bitmap image) {
+    public Message(Integer index, Boolean author, Uri imageUri, Bitmap imageBitmap) {
         this.setIndex(index);
         this.setAuthor(author);
-        this.setImage(image);
+        this.setImage(imageUri,imageBitmap);
     }
 
     public Integer getIndex() {
@@ -54,7 +55,7 @@ public class Message {
         this.text = text;
     }
 
-    public Bitmap getImage() { return image; };
+    public Image getImage() { return image; };
 
-    public void setImage(Bitmap image) { this.image = image; };
+    public void setImage(Uri image, Bitmap imageBitmap) { this.image = new Image(image, imageBitmap); };
 }

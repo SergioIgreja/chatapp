@@ -1,5 +1,8 @@
 package com.example.chat.fragments;
 
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleObserver;
+import android.arch.lifecycle.LifecycleOwner;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -10,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.chat.R;
+import com.example.chat.activities.FriendListActivity;
 import com.example.chat.adapter.FriendListAdapter;
 import com.example.chat.models.Friend;
 
@@ -18,7 +22,7 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class FriendsFragment extends Fragment {
+public class FriendsFragment extends Fragment implements LifecycleOwner {
 
     private ArrayList<Friend> mFriends;
     @BindView(R.id.friend_list_recycler_view) RecyclerView mRecyclerView;
@@ -36,6 +40,13 @@ public class FriendsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.getLifecycle().addObserver((LifecycleObserver) getActivity());
+    }
+
+    @Override
+    public void onStart() {
+        ((FriendListActivity)getActivity()).setActionBarTitle("Friends");
+        super.onStart();
     }
 
     @Override
@@ -47,5 +58,10 @@ public class FriendsFragment extends Fragment {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setAdapter(new FriendListAdapter(getContext(),mFriends));
         return view;
+    }
+
+    @Override
+    public Lifecycle getLifecycle() {
+        return super.getLifecycle();
     }
 }

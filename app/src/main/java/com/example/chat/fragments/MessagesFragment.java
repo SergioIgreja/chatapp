@@ -6,35 +6,44 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.Gravity;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.PopupMenu;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.example.chat.R;
 import com.example.chat.Utils;
+import com.example.chat.activities.FriendListActivity;
 import com.example.chat.adapter.MessageListAdapter;
 import com.example.chat.models.Message;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.URI;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,6 +55,7 @@ public class MessagesFragment extends Fragment {
 
     private ArrayList<Message> mMessages;
     private MessageListAdapter mMessageListAdapter;
+    private LinearLayoutManager llm;
     private String mFriendName;
     private Uri outputFileUri;
 
@@ -53,7 +63,6 @@ public class MessagesFragment extends Fragment {
     @BindView(R.id.send_message_button) ImageButton mSendMessageButton;
     @BindView(R.id.open_widget_options_button) ImageButton mOpenWidgetOptionsButton;
     @BindView(R.id.message_edit_text) EditText mMessageEditText;
-    @BindView(R.id.fragment_messages_friend_name) TextView mFriendNameTextView;
 
     public static MessagesFragment newInstance(ArrayList<Message> messages, String friendName) {
         MessagesFragment fragment = new MessagesFragment();
@@ -68,19 +77,42 @@ public class MessagesFragment extends Fragment {
     }
 
     @Override
+    public void onStart(){
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_messages,container,false);
         ButterKnife.bind(this, view);
-        LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        llm = new LinearLayoutManager(getContext());
         llm.setStackFromEnd(true);
+
+
 
         mRecyclerView.setLayoutManager(llm);
         mMessageListAdapter = new MessageListAdapter(getContext(),mMessages);
         mMessageListAdapter.setHasStableIds(true);
         mRecyclerView.setAdapter(mMessageListAdapter);
 
-        mFriendNameTextView.setText(mFriendName);
+        FriendListActivity activity = (FriendListActivity) getActivity();
+        activity.setActionBarTitle(mFriendName);
 
         mSendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,37 +134,34 @@ public class MessagesFragment extends Fragment {
         String text = mMessageEditText.getText().toString();
         if(!text.isEmpty()){
             Message newMessage = new Message(1,false, text);
-            mMessages.add(newMessage);
-            int position = mMessages.size() - 1;
-            mMessageListAdapter.notifyItemInserted(position);
+            mMessageListAdapter.addMessage(newMessage);
             mMessageEditText.setText("");
-            mRecyclerView.smoothScrollToPosition(position);
+            mRecyclerView.smoothScrollToPosition(mMessages.size());
         }
     }
 
     private void sendImage(Uri image) throws Exception {
-        Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), image);
-        Message newMessage = new Message(1, false, bitmap);
-        mMessages.add(newMessage);
-        int position = mMessages.size() - 1;
-        mMessageListAdapter = new MessageListAdapter(getContext(), mMessages);
-        mRecyclerView.setAdapter(mMessageListAdapter);
-        mRecyclerView.smoothScrollToPosition(position);
+        Message newMessage = new Message(1, false, image, null);
+        mMessageListAdapter.addMessage(newMessage);
+        mRecyclerView.smoothScrollToPosition(mMessages.size() - 1);
     }
 
-
-
     private void dispatchGetPictureIntent() {
-        //Determine URI of camera image to save
-        final File root = new File(Environment.getExternalStorageDirectory() + File.separator + "Chat" + File.separator);
-        root.mkdirs();
-        final String fname = Utils.getUniqueFileName();
-        final File sdImageMainDirectory = new File(root, fname);
+
+        // Determine Uri of camera image to save.
+        final File root = getContext().getExternalCacheDir();
+        File sdImageMainDirectory;
+        try {
+            sdImageMainDirectory = File.createTempFile("photo", ".jpg", root);
+        }catch (IOException e) {
+            System.out.println(e.getMessage());
+            sdImageMainDirectory = new File(root,"eeqe.jpeg");
+        }
         outputFileUri = Uri.fromFile(sdImageMainDirectory);
 
-        //Camera
+        // Camera.
         final List<Intent> cameraIntents = new ArrayList<>();
-        final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        final Intent captureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         final PackageManager packageManager = getActivity().getPackageManager();
         final List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
         for(ResolveInfo res : listCam) {
@@ -164,12 +193,12 @@ public class MessagesFragment extends Fragment {
                 final boolean isCamera;
                 if (data == null) {
                     isCamera = true;
-                }else {
+                } else {
                     final String action = data.getAction();
                     if (action == null) {
                         isCamera = false;
-                    }else {
-                        isCamera = action.equals(MediaStore.ACTION_IMAGE_CAPTURE);
+                    } else {
+                        isCamera = action.equals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     }
                 }
 
@@ -179,13 +208,13 @@ public class MessagesFragment extends Fragment {
                 } else {
                     selectedImageUri = data == null ? null : data.getData();
                 }
-
                 try {
                     sendImage(selectedImageUri);
-                }catch (Exception e){
+                }catch (Exception e) {
                     System.out.println(e.toString());
                 }
             }
         }
     }
+
 }
